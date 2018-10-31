@@ -10,5 +10,5 @@ import ru.kpfu.itis.model.Contract;
  * @author Kuznetsov Maxim
  */
 @Repository
-public interface ContractRepository extends JpaRepository<Contract, Long> {
+public interface ContractRepository extends JpaRepository<Contract, String> {
 }

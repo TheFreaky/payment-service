@@ -12,15 +12,13 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.GenericToStringSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-import java.util.Arrays;
-
 @Configuration
 public class RedisConfig {
 
-    @Value("${spring.redis.host:localhost}")
+    @Value("${spring.redis.host}")
     private String redisHost;
 
-    @Value("${spring.redis.port:6379}")
+    @Value("${spring.redis.port}")
     private int redisPort;
 
     @Bean
@@ -39,19 +37,10 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisMessageListenerContainer keyExpirationListenerContainer(RedisConnectionFactory connectionFactory) {
+    public RedisMessageListenerContainer keyExpirationListenerContainer(RedisConnectionFactory connectionFactory, MessageListener messageListener) {
         RedisMessageListenerContainer listenerContainer = new RedisMessageListenerContainer();
         listenerContainer.setConnectionFactory(connectionFactory);
-        listenerContainer.addMessageListener(messageListener(), new PatternTopic("__keyevent@0__:expired"));
+        listenerContainer.addMessageListener(messageListener, new PatternTopic("__keyevent@0__:expired"));
         return listenerContainer;
-    }
-
-    @Bean
-    public MessageListener messageListener() {
-        return (message, pattern) -> {
-            System.out.println(message);
-            System.out.println(Arrays.toString(pattern));
-            System.out.println(new String(message.getBody()));
-        };
     }
 }
