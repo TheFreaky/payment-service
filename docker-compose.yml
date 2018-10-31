@@ -1,0 +1,42 @@
+version: '3.3'
+
+services:
+  payment-service:
+    build: .
+    depends_on:
+    - rabbit
+    - db
+    restart: always
+
+  db:
+    image: postgres:10
+    ports:
+    - "5432:5432"
+    volumes:
+      - /home/maxim/Docker/postgres/data:/var/lib/postgresql/data
+    environment:
+    - POSTGRES_PASSWORD=password
+    - POSTGRES_USER=postgres
+    - POSTGRES_DB=test
+    restart: always
+
+  redis:
+    image: "redis:alpine"
+    ports:
+     - "6379:6379"
+    volumes:
+    - /home/maxim/Docker/redis/data:/data
+    restart: always
+
+  rabbit:
+    image: rabbitmq:3.7-management
+    ports:
+    - "5672:5672"
+    - "15672:15672"
+    volumes:
+    - /home/maxim/Docker/RabbitMq/data:/var/lib/rabbitmq
+    - /home/maxim/Docker/RabbitMq/data/logs:/var/log/rabbitmq
+    environment:
+    - RABBITMQ_LOGS=/var/log/rabbitmq/rabbit.log
+    - RABBITMQ_USE_LONGNAME=true
+    restart: always
