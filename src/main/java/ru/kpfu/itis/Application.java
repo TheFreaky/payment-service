@@ -7,10 +7,8 @@ import ru.kpfu.itis.service.TestService;
 
 @SpringBootApplication
 public class Application {
-
     public static void main(String... args) {
-        ConfigurableApplicationContext context = SpringApplication.run(Application.class, args);
-        context.getBean(TestService.class).test();
+        SpringApplication.run(Application.class, args);
     }
 
 }
