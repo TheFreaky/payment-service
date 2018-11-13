@@ -39,4 +39,8 @@ services:
     environment:
     - RABBITMQ_LOGS=/var/log/rabbitmq/rabbit.log
     - RABBITMQ_USE_LONGNAME=true
+    command: >
+      sh -c "apt-get update && apt-get install -y curl &&
+             curl http://www.rabbitmq.com/community-plugins/v3.6.x/rabbitmq_delayed_message_exchange-0.0.1.ez > $RABBITMQ_HOME/plugins/rabbitmq_delayed_message_exchange-0.0.1.ez &&
+             rabbitmq-plugins enable rabbitmq_delayed_message_exchange"
     restart: always
