@@ -11,7 +11,7 @@ public class MessageConsumer {
     @Autowired
     private ContractService contractService;
 
-    @RabbitListener(queues = "${messaging.contract.queue}")
+    @RabbitListener(queues = "${messaging.contract-create.queue}")
     public void process(ContractDto dto) {
         contractService.save(dto);
     }

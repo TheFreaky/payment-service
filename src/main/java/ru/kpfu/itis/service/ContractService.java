@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.kpfu.itis.dto.ContractDto;
 import ru.kpfu.itis.model.Contract;
 import ru.kpfu.itis.model.Payment;
+import ru.kpfu.itis.model.PaymentInterval;
 import ru.kpfu.itis.repository.ContractRepository;
 
 import javax.persistence.EntityNotFoundException;
@@ -32,9 +33,7 @@ public class ContractService {
 
     public void save(ContractDto dto) {
         Date nextPaidTime = new Date(dto.getCreated().toInstant()
-//                FIXME
-//                .plus(dto.getPaymentInterval(), ChronoUnit.MINUTES)
-                .plus(dto.getPaymentInterval(), ChronoUnit.SECONDS)
+                .plus(dto.getPaymentInterval(), ChronoUnit.MINUTES)
                 .toEpochMilli());
 
         Contract contract = Contract.builder()
@@ -45,12 +44,9 @@ public class ContractService {
                 .nextPaymentDate(nextPaidTime)
                 .build();
 
-        //FIXME
-        System.out.println(contract);
-        System.out.println("________________________________");
 
         executor.submit(() -> contractRepository.save(contract));
-        executor.submit(() -> paymentService.save(contract.getPaymentInterval(), Payment.builder()
+        executor.submit(() -> paymentService.save(PaymentInterval.valueOf(contract.getPaymentInterval()), Payment.builder()
                 .contractId(contract.getId())
                 .nextPaid(nextPaidTime)
                 .build()));
@@ -60,22 +56,15 @@ public class ContractService {
         Contract contract = contractRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Contract with id[" + id + "] not found"));
 
-        //FIXME
-        System.out.println("Payment. Id: " + id);
-        System.out.println("Date: " + new Date());
-        System.out.println("________________________________");
-
         Date oldPamentDate = contract.getNextPaymentDate();
         Date nextPaidTime = new Date(oldPamentDate.toInstant()
-//                FIXME
-//                .plus(contract.getPaymentInterval(), ChronoUnit.MINUTES)
-                .plus(contract.getPaymentInterval(), ChronoUnit.SECONDS)
+                .plus(contract.getPaymentInterval(), ChronoUnit.MINUTES)
                 .toEpochMilli());
 
 
         contract.setNextPaymentDate(nextPaidTime);
         executor.submit(() -> contractRepository.save(contract));
-        executor.submit(() -> paymentService.save(contract.getPaymentInterval(), Payment.builder()
+        executor.submit(() -> paymentService.save(PaymentInterval.valueOf(contract.getPaymentInterval()), Payment.builder()
                 .contractId(contract.getId())
                 .nextPaid(nextPaidTime)
                 .build()));

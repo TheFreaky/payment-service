@@ -10,7 +10,7 @@ public class RabbitExpirationMessageListener {
     @Autowired
     private ContractService contractService;
 
-    @RabbitListener(queues = "end-queue")
+    @RabbitListener(queues = "${messaging.payment-withdraw.queue}")
     public void process(PaymentDto contract) {
         contractService.takePayment(contract.getContractId());
     }

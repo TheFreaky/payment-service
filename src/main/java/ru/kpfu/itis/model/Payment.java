@@ -3,7 +3,6 @@ package ru.kpfu.itis.model;
 import lombok.Builder;
 import lombok.Data;
 
-import javax.persistence.Entity;
 import javax.persistence.Id;
 import java.util.Date;
 

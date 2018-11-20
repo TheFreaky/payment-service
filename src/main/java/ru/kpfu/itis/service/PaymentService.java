@@ -5,8 +5,10 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.kpfu.itis.config.property.MessagingProperties;
 import ru.kpfu.itis.dto.PaymentDto;
 import ru.kpfu.itis.model.Payment;
+import ru.kpfu.itis.model.PaymentInterval;
 
 import java.time.Duration;
 import java.util.Date;
@@ -20,23 +22,27 @@ public class PaymentService {
     @Autowired
     private MessageConverter messageConverter;
 
-    public void save(Integer paymentInterval, Payment payment) {
+    @Autowired
+    private MessagingProperties messagingProperties;
+
+    public void save(PaymentInterval paymentInterval, Payment payment) {
         PaymentDto paymentDto = PaymentDto.builder()
                 .contractId(payment.getContractId())
                 .build();
-        long delay = Duration.between(payment.getNextPaid().toInstant(), new Date().toInstant()).toMillis();
+        long delay = Duration.between(new Date().toInstant(), payment.getNextPaid().toInstant()).toMillis();
         MessageProperties messageProperties = new MessageProperties();
         messageProperties.setExpiration(String.valueOf(delay));
+        messageProperties.getHeaders().put("expiration", String.valueOf(delay));
 
         String routingKey;
-        if (paymentInterval < 20) {
-            routingKey = "min";
-        } else if (paymentInterval == 20) {
-            routingKey = "hour";
+        if (paymentInterval.equals(PaymentInterval.FAST)) {
+            routingKey = messagingProperties.getFastContract().getRoutingKey();
+        } else if (paymentInterval.equals(PaymentInterval.NORMAL)) {
+            routingKey = messagingProperties.getNormalContract().getRoutingKey();
         } else {
-            routingKey = "day";
+            routingKey = messagingProperties.getSlowContract().getRoutingKey();
         }
 
-        rabbitTemplate.send("front",routingKey, messageConverter.toMessage(paymentDto, messageProperties));
+        rabbitTemplate.send(messagingProperties.getExchange(), routingKey, messageConverter.toMessage(paymentDto, messageProperties));
     }
 }

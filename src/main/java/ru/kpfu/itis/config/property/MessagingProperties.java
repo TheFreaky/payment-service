@@ -8,7 +8,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class MessagingProperties {
 
     private String exchange;
-    private MessagingParams contract;
+    private MessagingParams fastContract;
+    private MessagingParams normalContract;
+    private MessagingParams slowContract;
+    private MessagingParams paymentWithdraw;
 
     @Data
     public static class MessagingParams {

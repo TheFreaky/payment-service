@@ -14,66 +14,59 @@ import java.util.Map;
 @Configuration
 public class MessagingConfig {
 
+    private static final String EXPIRED_MESSAGE_ROUTING_KEY = "x-dead-letter-routing-key";
+    private static final String EXPIRED_MESSAGE_EXCHANGE = "x-dead-letter-exchange";
+
     @Autowired
     private MessagingProperties messagingProperties;
 
     @Bean
-    public Exchange frontExchange() {
-        return new DirectExchange("front");
+    public Exchange expiryExchange() {
+        return new DirectExchange(messagingProperties.getExchange());
     }
 
     @Bean
-    public FanoutExchange backExchange() {
-        return new FanoutExchange("back");
+    public Queue paymentWithdrawQueue() {
+        return new Queue(messagingProperties.getPaymentWithdraw().getQueue());
     }
 
     @Bean
-    public Queue backQueue() {
-        return new Queue("end-queue");
-    }
-
-    @Bean
-    public Queue tenMinQueue() {
+    public Queue slowContractQueue() {
         Map<String, Object> arguments = new HashMap<>();
-        arguments.put("x-dead-letter-exchange", "");
-        arguments.put("x-dead-letter-routing-key", "result");
-        return new Queue("10min", true, false, false, arguments);
+        arguments.put(EXPIRED_MESSAGE_EXCHANGE, "");
+        arguments.put(EXPIRED_MESSAGE_ROUTING_KEY, messagingProperties.getPaymentWithdraw().getQueue());
+        return new Queue(messagingProperties.getSlowContract().getQueue(), true, false, false, arguments);
     }
 
     @Bean
-    public Queue hourQueue() {
+    public Queue normalContractQueue() {
         Map<String, Object> arguments = new HashMap<>();
-        arguments.put("x-dead-letter-exchange", "");
-        arguments.put("x-dead-letter-routing-key", "result");
-        return new Queue("1hour", true, false, false, arguments);
+        arguments.put(EXPIRED_MESSAGE_EXCHANGE, "");
+        arguments.put(EXPIRED_MESSAGE_ROUTING_KEY, messagingProperties.getPaymentWithdraw().getQueue());
+        return new Queue(messagingProperties.getNormalContract().getQueue(), true, false, false, arguments);
     }
 
     @Bean
-    public Queue dayQueue() {
+    public Queue fastContractQueue() {
         Map<String, Object> arguments = new HashMap<>();
-        arguments.put("x-dead-letter-exchange", "");
-        arguments.put("x-dead-letter-routing-key", "result");
-        return new Queue("1day", true, false, false, arguments);
-    }
-
-    @Bean
-    public Binding bindingBack() {
-        return BindingBuilder.bind(backQueue()).to(frontExchange()).with("result").noargs();
+        arguments.put(EXPIRED_MESSAGE_EXCHANGE, "");
+        arguments.put(EXPIRED_MESSAGE_ROUTING_KEY, messagingProperties.getPaymentWithdraw().getQueue());
+        return new Queue(messagingProperties.getFastContract().getQueue(), true, false, false, arguments);
     }
 
     @Bean
     public Binding binding1() {
-        return BindingBuilder.bind(tenMinQueue()).to(frontExchange()).with("min").noargs();
+        return BindingBuilder.bind(slowContractQueue()).to(expiryExchange()).with(messagingProperties.getSlowContract().getRoutingKey()).noargs();
     }
 
     @Bean
     public Binding binding2() {
-        return BindingBuilder.bind(hourQueue()).to(frontExchange()).with("hour").noargs();
+        return BindingBuilder.bind(normalContractQueue()).to(expiryExchange()).with(messagingProperties.getNormalContract().getRoutingKey()).noargs();
     }
 
     @Bean
     public Binding binding3() {
-        return BindingBuilder.bind(dayQueue()).to(frontExchange()).with("day").noargs();
+        return BindingBuilder.bind(fastContractQueue()).to(expiryExchange()).with(messagingProperties.getFastContract().getRoutingKey()).noargs();
     }
 
     @Bean

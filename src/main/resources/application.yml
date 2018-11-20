@@ -18,7 +18,17 @@ spring:
         default-requeue-rejected: false
 
 messaging:
-  exchange: payment-system
-  contract:
+  exchange: entry-exchange
+  contract-create:
     queue: contract-service
-    routing-key: contract-event
+  fast-contract:
+    queue: minutes-contract-queue
+    routing-key: minutes
+  normal-contract:
+    queue: day-contract-queue
+    routing-key: day
+  slow-contract:
+    queue: month-contract-queue
+    routing-key: month
+  payment-withdraw:
+    queue: payment-withdraw-queue
