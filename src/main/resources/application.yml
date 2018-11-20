@@ -15,6 +15,7 @@ spring:
     listener:
       simple:
         concurrency: 5
+        default-requeue-rejected: false
 
 messaging:
   exchange: payment-system

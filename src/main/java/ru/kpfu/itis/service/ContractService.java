@@ -32,7 +32,9 @@ public class ContractService {
 
     public void save(ContractDto dto) {
         Date nextPaidTime = new Date(dto.getCreated().toInstant()
-                .plus(dto.getPaymentInterval(), ChronoUnit.MINUTES)
+//                FIXME
+//                .plus(dto.getPaymentInterval(), ChronoUnit.MINUTES)
+                .plus(dto.getPaymentInterval(), ChronoUnit.SECONDS)
                 .toEpochMilli());
 
         Contract contract = Contract.builder()
@@ -43,8 +45,12 @@ public class ContractService {
                 .nextPaymentDate(nextPaidTime)
                 .build();
 
+        //FIXME
+        System.out.println(contract);
+        System.out.println("________________________________");
+
         executor.submit(() -> contractRepository.save(contract));
-        executor.submit(() -> paymentService.save(Payment.builder()
+        executor.submit(() -> paymentService.save(contract.getPaymentInterval(), Payment.builder()
                 .contractId(contract.getId())
                 .nextPaid(nextPaidTime)
                 .build()));
@@ -54,15 +60,22 @@ public class ContractService {
         Contract contract = contractRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Contract with id[" + id + "] not found"));
 
+        //FIXME
+        System.out.println("Payment. Id: " + id);
+        System.out.println("Date: " + new Date());
+        System.out.println("________________________________");
+
         Date oldPamentDate = contract.getNextPaymentDate();
         Date nextPaidTime = new Date(oldPamentDate.toInstant()
-                .plus(contract.getPaymentInterval(), ChronoUnit.MINUTES)
+//                FIXME
+//                .plus(contract.getPaymentInterval(), ChronoUnit.MINUTES)
+                .plus(contract.getPaymentInterval(), ChronoUnit.SECONDS)
                 .toEpochMilli());
 
 
         contract.setNextPaymentDate(nextPaidTime);
         executor.submit(() -> contractRepository.save(contract));
-        executor.submit(() -> paymentService.save(Payment.builder()
+        executor.submit(() -> paymentService.save(contract.getPaymentInterval(), Payment.builder()
                 .contractId(contract.getId())
                 .nextPaid(nextPaidTime)
                 .build()));

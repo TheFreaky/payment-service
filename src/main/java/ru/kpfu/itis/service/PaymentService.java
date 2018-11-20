@@ -13,8 +13,6 @@ import java.util.Date;
 
 @Service
 public class PaymentService {
-    private final static String DELAY_QUEUE_NAME = "delayed.queue";
-    private final static String DELAY_EXCHANGE_NAME = "delayed.exchange";
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
@@ -22,17 +20,23 @@ public class PaymentService {
     @Autowired
     private MessageConverter messageConverter;
 
-    public void save(Payment payment) {
+    public void save(Integer paymentInterval, Payment payment) {
         PaymentDto paymentDto = PaymentDto.builder()
                 .contractId(payment.getContractId())
                 .build();
         long delay = Duration.between(payment.getNextPaid().toInstant(), new Date().toInstant()).toMillis();
         MessageProperties messageProperties = new MessageProperties();
-        messageProperties.setDelay((int) delay);
-        rabbitTemplate.send(
-                DELAY_EXCHANGE_NAME,
-                DELAY_QUEUE_NAME,
-                messageConverter.toMessage(paymentDto, messageProperties)
-        );
+        messageProperties.setExpiration(String.valueOf(delay));
+
+        String routingKey;
+        if (paymentInterval < 20) {
+            routingKey = "min";
+        } else if (paymentInterval == 20) {
+            routingKey = "hour";
+        } else {
+            routingKey = "day";
+        }
+
+        rabbitTemplate.send("front",routingKey, messageConverter.toMessage(paymentDto, messageProperties));
     }
 }
